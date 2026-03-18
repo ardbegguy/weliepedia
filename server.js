@@ -332,8 +332,9 @@ function validateInput(data) {
   
 // Start the server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Weliepedia backend server running on port ${PORT}`);
+const HOST = process.env.HOST || '0.0.0.0';
+app.listen(PORT, HOST, () => {
+  console.log(`Weliepedia backend server running on ${HOST}:${PORT}`);
   console.log('API endpoint: POST /api/article');
   console.log('Health check: GET /health');
 });
