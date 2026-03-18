@@ -92,6 +92,15 @@ app.post('/api/article', async (req, res) => {
   }
 
   try {
+    // Check if API key is configured
+    if (!process.env.GROQ_API_KEY || process.env.GROQ_API_KEY === 'your_groq_api_key_here') {
+      return res.status(500).json({
+        success: false,
+        error: 'Groq API key not configured. Please add GROQ_API_KEY to environment variables.',
+        code: 'API_KEY_MISSING'
+      });
+    }
+
     // Extract validated parameters
     const { liarName, victim, lie, tone, length, format, modelId } = validation.data;
     
@@ -140,14 +149,15 @@ app.post('/api/article', async (req, res) => {
           }
         ],
         temperature: 0.8,
-        max_tokens: 2000,
+        max_tokens: 1000, // Reduced for free tier
         response_format: { type: 'json_object' }
       },
       {
         headers: {
           'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
           'Content-Type': 'application/json'
-        }
+        },
+        timeout: 25000 // 25 second timeout for free tier
       }
     );
 
