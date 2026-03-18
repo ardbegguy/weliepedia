@@ -30,7 +30,12 @@ app.use((req, res, next) => {
   res.setHeader('X-XSS-Protection', '1; mode=block');
   next();
 });
-
+// ADD CORS MIDDLEWARE HERE (BELOW THIS LINE)
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    next();
+  });
 // Health check endpoint for monitoring
 <HEAD
 // Health check endpoint
