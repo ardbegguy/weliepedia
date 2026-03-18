@@ -36,35 +36,22 @@ app.use((req, res, next) => {
     res.header('Access-Control-Allow-Headers', 'Content-Type');
     next();
   });
-// Health check endpoint for monitoring
-<HEAD
 // Health check endpoint
-app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
-  });
-  
-  // ADD THIS NEW ROUTE - FIXES THE "CANNOT GET" ERROR
-  app.get('/', (req, res) => {
-    res.json({
-      status: 'ok',
-      message: 'Weliepedia Backend API',
-      endpoints: {
-        health: '/health',
-        generate: '/api/article'
-      }
-    });
-  });
-  
-  // API endpoint for article generation
-  app.post('/api/article', async (req, res) => {
-    // ... your existing code ...
-  });
-  
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-52a983134e9eb74b22036bedfd2c0aa56bb0a1b0
+// ADD THIS NEW ROUTE - FIXES THE "CANNOT GET" ERROR
+app.get('/', (req, res) => {
+  res.json({
+    status: 'ok',
+    message: 'Weliepedia Backend API',
+    endpoints: {
+      health: '/health',
+      generate: '/api/article'
+    }
+  });
+});
 
 /**
  * POST /api/article
