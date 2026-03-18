@@ -32,6 +32,7 @@ app.use((req, res, next) => {
 });
 
 // Health check endpoint for monitoring
+<HEAD
 // Health check endpoint
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -54,6 +55,11 @@ app.get('/health', (req, res) => {
     // ... your existing code ...
   });
   
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+52a983134e9eb74b22036bedfd2c0aa56bb0a1b0
 
 /**
  * POST /api/article
