@@ -1452,36 +1452,31 @@ ${fmtGuide[fmt]},
 
 try {
 
-const selectedModel = modelMap[model];
-
-const response = await fetch('http://competitive-rheba-ardbegguy-0b0e4dc9.koyeb.app/api/article', {
-
+const response = await fetch('https://competitive-rheba-ardbegguy-0b0e4dc9.koyeb.app/api/article', {
 
 method: 'POST',
 
 headers: {
 
-'Content-Type': 'application/json',
-
-'Authorization': 'Bearer ' + 'free-tier'
+'Content-Type': 'application/json'
 
         },
 
 body: JSON.stringify({
 
-model: selectedModel,
+liarName: uname,
 
-messages: [
+victim: fname,
 
-            { role: 'system', content: 'You are a helpful assistant. Respond only with valid JSON, no markdown fences, no preamble.' },
+lie: lie,
 
-            { role: 'user', content: prompt }
+tone: tone,
 
-          ],
+length: detail,
 
-max_tokens: 2000,
+format: fmt,
 
-temperature: 0.8
+modelId: model
 
         })
 
@@ -1495,19 +1490,13 @@ throw new Error(`API error: ${response.status} ${response.statusText}`);
 
 const data = await response.json();
 
-if (data.error) {
+if (!data.success) {
 
-throw new Error(data.error.message || 'API request failed');
-
-      }
-
-if (!data.choices || !data.choices[0]) {
-
-throw new Error('Invalid API response structure');
+throw new Error(data.error || 'API request failed');
 
       }
 
-let raw = data.choices[0].message.content;
+let raw = data.article;
 
 raw = cleanJsonResponse(raw);
 
