@@ -107,11 +107,11 @@ app.post('/api/article', async (req, res) => {
     // Map the frontend model ID to Groq's API model ID
     const modelMapping = {
       'llama3-70b': 'llama-3.3-70b-versatile',
-      'mistral': 'mixtral-8x7b-32768',
-      'qwen3': 'qwen/qwen3-32b',
-      'gpt-oss': 'openai/gpt-oss-20b',
+      'mistral': 'llama-3.1-70b-versatile', // Updated from deprecated model
+      'qwen3': 'qwen-2.5-32b',
+      'gpt-oss': 'llama-3.1-8b-instant', // Updated from deprecated model
       'llama3-8b': 'llama-3.1-8b-instant',
-      'kimi': 'moonshotai/kimi-k2-instruct-0905'
+      'kimi': 'qwen-2.5-32b' // Updated to available model
     };
     
     const groqModel = modelMapping[modelId];
