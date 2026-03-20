@@ -89,15 +89,11 @@ body {
   text-transform: uppercase;
 }
 
-.input-card {
-  background: var(--surface);
-  border-radius: 20px;
-  padding: 24px;
-  margin-bottom: 40px;
+.modern-inputs {
   display: flex;
   flex-direction: column;
   gap: 24px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  margin-bottom: 40px;
 }
 .field { display: flex; flex-direction: column; gap: 8px; }
 .f-label {
@@ -108,103 +104,65 @@ body {
   color: var(--text-muted);
 }
 input[type="text"], textarea {
-  background: var(--surface-high);
-  border: none;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 16px;
   color: var(--text);
   font-family: 'Inter', sans-serif;
   font-size: 16px;
   outline: none;
-  transition: box-shadow 0.2s;
+  transition: all 0.2s;
 }
 input[type="text"]:focus, textarea:focus {
-  box-shadow: 0 0 0 2px rgba(186,158,255,0.5);
+  border-color: var(--primary);
+  background: rgba(186,158,255,0.05);
 }
-textarea { resize: vertical; min-height: 120px; }
+textarea { resize: vertical; min-height: 100px; }
 
-/* ── CINEMATIC CARDS (Archetypes) ── */
-.h-scroll {
+/* ── ORBITAL ICONS (Uniform Picker) ── */
+.orb-scroll {
   display: flex;
   overflow-x: auto;
   gap: 16px;
   padding-bottom: 16px;
-  scrollbar-width: none; /* Firefox */
+  scrollbar-width: none;
   scroll-snap-type: x mandatory;
+  margin-bottom: 40px;
 }
-.h-scroll::-webkit-scrollbar { display: none; }
-
-.arch-card {
-  flex: 0 0 140px;
-  height: 180px;
-  border-radius: 16px;
-  scroll-snap-align: start;
-  position: relative;
-  overflow: hidden;
-  cursor: pointer;
-  background: var(--surface-high);
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.arch-card img {
-  width: 100%; height: 100%; object-fit: cover;
-  transition: filter 0.3s;
-}
-.arch-card.grayscale img { filter: grayscale(100%) opacity(0.6); }
-.arch-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(186,158,255,0.2); }
-.arch-card:hover img { filter: none; }
-.arch-overlay {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%);
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  height: 50%;
-}
-.arch-name {
-  font-family: 'Newsreader', serif;
-  font-size: 16px;
-  font-weight: 600;
-  color: #fff;
-  margin-bottom: 2px;
-}
-.arch-group {
-  font-size: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--secondary);
-  font-weight: 700;
-}
-
-/* ── ORBITAL ICONS (AI Models) ── */
-.ai-picker { margin-bottom: 40px; }
-.ai-orb {
+.orb-scroll::-webkit-scrollbar { display: none; }
+.orb-item {
   flex: 0 0 auto;
-  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
   cursor: pointer;
-  opacity: 0.6;
+  opacity: 0.5;
   transition: all 0.2s;
   scroll-snap-align: start;
+  width: 72px;
 }
-.ai-orb.active { opacity: 1; }
-.ai-orb-inner {
+.orb-item.active { opacity: 1; }
+.orb-circle {
   width: 64px; height: 64px;
   border-radius: 50%;
   background: var(--surface-high);
   display: flex; align-items: center; justify-content: center;
-  font-size: 24px;
+  font-size: 20px; font-weight: 700; font-family: 'Newsreader', serif;
   transition: all 0.3s;
-  position: relative;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
 }
-.ai-orb.active .ai-orb-inner {
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  box-shadow: 0 0 20px rgba(186,158,255,0.4);
-  color: #000;
+.orb-item.active .orb-circle {
+  background: var(--primary-dim);
+  color: #fff;
+  border-color: var(--primary);
+  box-shadow: 0 0 20px rgba(186,158,255,0.4), inset 0 2px 4px rgba(0,0,0,0.2);
 }
-.ai-orb-label {
-  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; text-align: center;
+.orb-label {
+  font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; text-align: center; color: var(--text-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
 }
+.orb-item.active .orb-label { color: var(--text); }
 
 /* ── INTENSITY SLIDER ── */
 .intensity-box { margin-bottom: 40px; }
@@ -250,29 +208,7 @@ input[type=range]::-webkit-slider-thumb {
 }
 .global-stats span { color: var(--primary); font-weight: 700; }
 
-/* ── STYLE GRID ── */
-.style-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 40px;
-}
-.style-card {
-  background: var(--surface);
-  border-radius: 16px;
-  padding: 16px;
-  cursor: pointer;
-  border: 2px solid transparent;
-  transition: all 0.2s;
-  display: flex; flex-direction: column; gap: 8px;
-}
-.style-card.active {
-  background: rgba(186,158,255,0.1);
-  border-color: var(--primary);
-}
-.style-card-icon { font-size: 24px; color: var(--text-muted); }
-.style-card.active .style-card-icon { color: var(--primary); }
-.style-card-title { font-family: 'Newsreader', serif; font-size: 18px; }
+
 
 /* ── CTA ── */
 .gen-container {
@@ -410,7 +346,8 @@ input[type=range]::-webkit-slider-thumb {
     </header>
 
     <!-- Inputs -->
-    <div class="input-card">
+    <!-- Inputs -->
+    <div class="modern-inputs">
       <div class="field">
         <label class="f-label">Lie You Told</label>
         <textarea id="lie" placeholder="Drop your tiny lie here..."></textarea>
@@ -425,38 +362,29 @@ input[type=range]::-webkit-slider-thumb {
       </div>
     </div>
 
-    <!-- Archetypes -->
+    <!-- Archetypes (Character Picker) -->
     <div class="section-title">
-      Select Your Archetype
-      <span class="section-meta">11 Tones</span>
+      Pick Your Liar
+      <span class="section-meta">Archetypes</span>
     </div>
-    <div class="h-scroll" id="arch-scroll">
+    <div class="orb-scroll" id="arch-scroll">
       <!-- Generated by JS -->
     </div>
 
-    <!-- AI Models -->
-    <div class="section-title" style="margin-top: 24px;">
-      Which AI gets blamed?
-      <span class="section-meta">4 Models</span>
+    <!-- Tone & Intensity -->
+    <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;">
+      <div class="section-title" style="margin:0">Deception Tone</div>
+      <div style="color:var(--secondary); font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em;" id="tone-val">Deadpan</div>
     </div>
-    <div class="h-scroll ai-picker">
-      <div class="ai-orb active" id="btn-llama3-70b" onclick="setOpt('model','llama3-70b',this)">
-        <div class="ai-orb-inner">🤖</div>
-        <div class="ai-orb-label">Llama 70B</div>
-      </div>
-      <div class="ai-orb" id="btn-qwen3" onclick="setOpt('model','qwen3',this)">
-        <div class="ai-orb-inner">🧠</div>
-        <div class="ai-orb-label">Qwen 2.5</div>
-      </div>
-      <div class="ai-orb" id="btn-llama3-8b" onclick="setOpt('model','llama3-8b',this)">
-        <div class="ai-orb-inner">⚡</div>
-        <div class="ai-orb-label">Llama 8B</div>
-      </div>
+    <div class="slider-container">
+      <input type="range" min="1" max="5" value="1" class="slider" id="tone-slider" oninput="updateTone(this.value)">
+    </div>
+    <div class="intensity-labels" style="margin-bottom: 24px;">
+      <span>Deadpan</span><span>Corporate</span><span>Sarcastic</span><span>Melodrama</span><span>Conspiracy</span>
     </div>
 
-    <!-- Intensity -->
     <div class="intensity-box">
-      <div style="display:flex; justify-content:space-between; align-items:baseline;">
+      <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;">
         <div class="section-title" style="margin:0">Lying Intensity</div>
         <div style="color:var(--secondary); font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em;" id="intensity-val">Legendary</div>
       </div>
@@ -468,23 +396,47 @@ input[type=range]::-webkit-slider-thumb {
       </div>
     </div>
 
-    <!-- Style Grid -->
-    <div class="style-grid">
-      <div class="style-card active" onclick="setOpt('fmt','comic',this)">
-        <div class="style-card-icon">📖</div>
-        <div class="style-card-title">Manga Edition</div>
+    <!-- AI Models -->
+    <div class="section-title">
+      Blame the AI
+      <span class="section-meta">Engine</span>
+    </div>
+    <div class="orb-scroll ai-picker">
+      <div class="orb-item active" id="btn-llama3-70b" onclick="setOpt('model','llama3-70b',this)">
+        <div class="orb-circle">L7</div>
+        <div class="orb-label">Llama 70B</div>
       </div>
-      <div class="style-card" onclick="setOpt('fmt','text',this)">
-        <div class="style-card-icon">🏛️</div>
-        <div class="style-card-title">Wikipedia Parody</div>
+      <div class="orb-item" id="btn-qwen3" onclick="setOpt('model','qwen3',this)">
+        <div class="orb-circle">Q2</div>
+        <div class="orb-label">Qwen 2.5</div>
       </div>
-      <div class="style-card" onclick="setOpt('fmt','whatsapp',this)">
-        <div class="style-card-icon">💬</div>
-        <div class="style-card-title">WhatsApp Leak</div>
+      <div class="orb-item" id="btn-llama3-8b" onclick="setOpt('model','llama3-8b',this)">
+        <div class="orb-circle">L8</div>
+        <div class="orb-label">Llama 8B</div>
       </div>
-      <div class="style-card" onclick="setOpt('fmt','flowchart',this)">
-        <div class="style-card-icon">🔀</div>
-        <div class="style-card-title">Flowchart</div>
+    </div>
+
+    <!-- Output Style -->
+    <div class="section-title">
+      Format Output
+      <span class="section-meta">Print</span>
+    </div>
+    <div class="orb-scroll style-picker">
+      <div class="orb-item active" onclick="setOpt('fmt','comic',this)">
+        <div class="orb-circle">MG</div>
+        <div class="orb-label">Manga</div>
+      </div>
+      <div class="orb-item" onclick="setOpt('fmt','text',this)">
+        <div class="orb-circle">WP</div>
+        <div class="orb-label">Wiki</div>
+      </div>
+      <div class="orb-item" onclick="setOpt('fmt','whatsapp',this)">
+        <div class="orb-circle">WA</div>
+        <div class="orb-label">Chat</div>
+      </div>
+      <div class="orb-item" onclick="setOpt('fmt','flowchart',this)">
+        <div class="orb-circle">FL</div>
+        <div class="orb-label">Flow</div>
       </div>
     </div>
 
@@ -617,32 +569,21 @@ function fetchStats() {
 function initArchetypes() {
   const sc = document.getElementById('arch-scroll');
   if(!sc) return;
-  const tones = [
-    {name:'Deadpan', group:'The Ruthless', tone:'deadpan', colors:'linear-gradient(135deg, #1f1c2c, #928dab)', icon:'😐'},
-    {name:'Sarcasm', group:'The Mischief', tone:'sarcasm', colors:'linear-gradient(135deg, #f12711, #f5af19)', icon:'😏'},
-    {name:'Melodrama', group:'The Legend', tone:'melodrama', colors:'linear-gradient(135deg, #8E2DE2, #4A00E0)', icon:'🎭'},
-    {name:'Thriller', group:'The Grifter', tone:'thriller', colors:'linear-gradient(135deg, #000000, #434343)', icon:'🔪'},
-    {name:'Horror', group:'The Sinister', tone:'horror', colors:'linear-gradient(135deg, #111111, #8b0000)', icon:'👁️'},
-    {name:'Documentary', group:'The Scholar', tone:'documentary', colors:'linear-gradient(135deg, #3E5151, #DECBA4)', icon:'🎥'},
-    {name:'Gossip', group:'The Whisperer', tone:'gossip', colors:'linear-gradient(135deg, #FF416C, #FF4B2B)', icon:'💅'},
-    {name:'Corporate', group:'The Executive', tone:'corporate', colors:'linear-gradient(135deg, #0F2027, #203A43)', icon:'📈'},
-    {name:'Gen Z', group:'The Zoomer', tone:'genz', colors:'linear-gradient(135deg, #12c2e9, #c471ed)', icon:'💀'},
-    {name:'Conspiracy', group:'The Theorist', tone:'conspiratorial', colors:'linear-gradient(135deg, #16222A, #3A6073)', icon:'👽'},
-    {name:'Academic', group:'The Professor', tone:'academic', colors:'linear-gradient(135deg, #5c258d, #4389a2)', icon:'📚'}
-  ];
-  tones.forEach((t, i) => {
+  const flatChars = [];
+  CHARS.forEach(g => g.names.forEach(n => flatChars.push(n)));
+  
+  flatChars.forEach((n, i) => {
+    const abbr = n.substring(0,2).toUpperCase();
     const d = document.createElement('div');
-    d.className = 'arch-card' + (i===0?' active':'');
-    d.onclick = () => setOpt('tone', t.tone, d);
+    d.className = 'orb-item' + (i===0?' active':'');
+    d.onclick = () => selectCharOrb(n, d);
     d.innerHTML = `
-      <div style="width:100%; height:100%; background:${t.colors}; display:flex; align-items:center; justify-content:center; font-size:64px; opacity:0.8; transition:transform 0.3s; filter:grayscale(30%);" class="arch-img">${t.icon}</div>
-      <div class="arch-overlay">
-        <div class="arch-name">${t.name}</div>
-        <div class="arch-group">${t.group}</div>
-      </div>
+      <div class="orb-circle">${abbr}</div>
+      <div class="orb-label" title="${n}">${n.split(' ')[0]}</div>
     `;
     sc.appendChild(d);
   });
+  if (flatChars.length > 0) selectChar(flatChars[0]); 
 }
 
 window.onload=()=>{initSplash();initPicker();initArchetypes();fetchStats();};
@@ -655,22 +596,32 @@ function updateIntensity(val) {
   const labels = ['Short', 'Credible', 'Stretching It', 'Legendary'];
   document.getElementById('intensity-val').textContent = labels[intensity-1];
 }
+function updateTone(val) {
+  const t = parseInt(val);
+  const labels = ['Deadpan', 'Corporate', 'Sarcastic', 'Melodrama', 'Conspiratorial'];
+  const mapping = ['deadpan', 'corporate', 'sarcasm', 'melodrama', 'conspiratorial'];
+  tone = mapping[t-1];
+  document.getElementById('tone-val').textContent = labels[t-1];
+}
 function setOpt(type,val,el){
-  if(type==='tone') tone=val;
-  else if(type==='fmt') fmt=val;
-  else model=val;
+  if(type==='fmt') fmt=val;
+  else if(type==='model') model=val;
   
   if (type === 'fmt') {
-    document.querySelectorAll('.style-card').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.style-picker .orb-item').forEach(b=>b.classList.remove('active'));
   } else if (type === 'model') {
-    document.querySelectorAll('.ai-orb').forEach(b=>b.classList.remove('active'));
-  } else if (type === 'tone') {
-    document.querySelectorAll('.arch-card').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.ai-picker .orb-item').forEach(b=>b.classList.remove('active'));
+  } else if (type === 'char') {
+    document.querySelectorAll('#arch-scroll .orb-item').forEach(b=>b.classList.remove('active'));
   }
   if(el) el.classList.add('active');
 }
 
 /* Picker */
+function selectCharOrb(name, el) {
+  selectChar(name);
+  setOpt('char', name, el);
+}
 function openPicker(f){targetField=f;document.getElementById('char-modal').classList.add('open')}
 function closeModal(){document.getElementById('char-modal').classList.remove('open')}
 function selectChar(n){document.getElementById(targetField).value=n;closeModal()}
