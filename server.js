@@ -4,107 +4,70 @@
  * This Express server handles the article generation endpoint by calling the Groq API
  * with the appropriate model and parameters. It validates inputs, processes responses,
  * and returns structured JSON for the frontend.
- * 
- * Features:
- * - Input validation
- * - Groq API integration
- * - Error handling
- * - Production-ready logging
- * - Environment configuration
  */
 
-// Import required modules
-require('dotenv').config(); // Load environment variables from .env file
+require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
 
-// Create Express application
 const app = express();
+app.use(express.json({ limit: '10kb' }));
+app.use(express.static(__dirname));
 
-// Middleware configuration
-app.use(express.json({ limit: '10kb' })); // Limit request body size
 app.use((req, res, next) => {
-  // Add security headers for production
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   next();
 });
-// ADD CORS MIDDLEWARE HERE (BELOW THIS LINE)
+
+// CORS Middleware
 app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    if (req.method === 'OPTIONS') {
-        res.sendStatus(200);
-    } else {
-        next();
-    }
-  });
-// Health check endpoint
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
+
+let globalLieCount = parseInt(process.env.INITIAL_LIE_COUNT || '142', 10);
+
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// ADD THIS NEW ROUTE - FIXES THE "CANNOT GET" ERROR
 app.get('/', (req, res) => {
   res.json({
     status: 'ok',
     message: 'Weliepedia Backend API',
     endpoints: {
       health: '/health',
-      generate: '/api/article'
+      generate: '/api/article',
+      stats: '/api/stats'
     }
   });
 });
 
-/**
- * POST /api/article
- * 
- * Generates a creative article about a lie using the Groq API
- * 
- * @param {Object} req.body - Request payload containing:
- *   @param {string} liarName - Name of the person telling the lie
- *   @param {string} victim - Name of the person being lied to
- *   @param {string} lie - The lie being told
- *   @param {string} tone - Desired tone (deadpan, melodrama, etc.)
- *   @param {string} length - Length of the response (quick, full, epic)
- *   @param {string} format - Output format (comic, whatsapp, text)
- *   @param {string} modelId - ID of the Groq model to use
- * 
- * @returns {Object} JSON response with:
- *   @param {string} article - Generated article content
- *   @param {string} format - Requested format
- *   @param {string} tone - Requested tone
- *   @param {string} model - Model used for generation
- *   @param {boolean} success - Whether the operation was successful
- *   @param {string} [error] - Error message if success is false
- */
+app.get('/api/stats', (req, res) => {
+  res.json({ totalLies: globalLieCount });
+});
+
 app.post('/api/article', async (req, res) => {
-  // Validate input parameters
   const validation = validateInput(req.body);
   if (!validation.isValid) {
-    return res.status(400).json({
-      success: false,
-      error: validation.message,
-      field: validation.field
-    });
+    return res.status(400).json({ success: false, error: validation.message, field: validation.field });
   }
 
   try {
-    // Check if API key is configured
     if (!process.env.GROQ_API_KEY || process.env.GROQ_API_KEY === 'your_groq_api_key_here') {
-      return res.status(500).json({
-        success: false,
-        error: 'Groq API key not configured. Please add GROQ_API_KEY to environment variables.',
-        code: 'API_KEY_MISSING'
-      });
+      return res.status(500).json({ success: false, error: 'Groq API key not configured.', code: 'API_KEY_MISSING' });
     }
 
-    // Extract validated parameters
     const { liarName, victim, lie, tone, length, format, modelId } = validation.data;
     
-    // Map the frontend model ID to Groq's API model ID
     const modelMapping = {
       'llama3-70b': 'llama-3.3-70b-versatile',
       'mistral': 'llama-3.1-70b-versatile',
@@ -116,24 +79,11 @@ app.post('/api/article', async (req, res) => {
     
     const groqModel = modelMapping[modelId];
     if (!groqModel) {
-      return res.status(400).json({
-        success: false,
-        error: `Invalid model ID: ${modelId}`,
-        field: 'modelId'
-      });
+      return res.status(400).json({ success: false, error: `Invalid model ID: ${modelId}`, field: 'modelId' });
     }
 
-    // Create the prompt for the Groq API
-    const prompt = createPrompt({
-      liarName,
-      victim,
-      lie,
-      tone,
-      length,
-      format
-    });
+    const prompt = createPrompt({ liarName, victim, lie, tone, length, format });
 
-    // Call the Groq API
     const response = await axios.post(
       'https://api.groq.com/openai/v1/chat/completions',
       {
@@ -141,15 +91,15 @@ app.post('/api/article', async (req, res) => {
         messages: [
           {
             role: 'system',
-            content: 'You are the AI editor of Weliepedia — a comedy encyclopedia documenting lies as if they were real history.'
+            content: "You are a cynical, mildly impressed journalist covering humanity's greatest lies. Your writing is funny, sarcastic, unhinged, and never polite. Treat the lie as documented historical fact."
           },
           {
             role: 'user',
             content: prompt
           }
         ],
-        temperature: 0.8,
-        max_tokens: 1000, // Reduced for free tier
+        temperature: 0.85,
+        max_tokens: 1500,
         response_format: { type: 'json_object' }
       },
       {
@@ -157,19 +107,18 @@ app.post('/api/article', async (req, res) => {
           'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
           'Content-Type': 'application/json'
         },
-        timeout: 25000 // 25 second timeout for free tier
+        timeout: 25000
       }
     );
 
-    // Extract and validate the response
     const apiResponse = response.data;
     if (!apiResponse.choices || !apiResponse.choices[0]?.message?.content) {
       throw new Error('Invalid API response structure');
     }
 
     const articleContent = apiResponse.choices[0].message.content;
+    globalLieCount++; // Increment lie counter
     
-    // Return success response
     res.status(200).json({
       success: true,
       article: articleContent,
@@ -179,177 +128,103 @@ app.post('/api/article', async (req, res) => {
     });
     
   } catch (error) {
-    // Handle different types of errors
     if (error.response) {
-      // Groq API error
       const errorCode = error.response.status;
       const errorMessage = error.response.data.error?.message || 'Groq API error';
-      
       console.error(`Groq API error [${errorCode}]: ${errorMessage}`);
-      
-      return res.status(errorCode).json({
-        success: false,
-        error: `API service error: ${errorMessage}`,
-        code: errorCode
-      });
+      return res.status(errorCode).json({ success: false, error: `API service error: ${errorMessage}`, code: errorCode });
     } else if (error.message === 'Invalid API response structure') {
       console.error('Invalid response structure from Groq API');
-      return res.status(502).json({
-        success: false,
-        error: 'Invalid response from AI service. Please try again.',
-        code: 'API_RESPONSE_INVALID'
-      });
+      return res.status(502).json({ success: false, error: 'Invalid response from AI service.', code: 'API_RESPONSE_INVALID' });
     } else {
-      // General error
       console.error('Server error:', error.message);
-      return res.status(500).json({
-        success: false,
-        error: 'Internal server error. Please try again later.',
-        code: 'SERVER_ERROR'
-      });
+      return res.status(500).json({ success: false, error: 'Internal server error.', code: 'SERVER_ERROR' });
     }
   }
 });
 
-/**
- * Creates the prompt for the Groq API based on input parameters
- * 
- * @param {Object} params - Input parameters
- * @returns {string} Formatted prompt string
- */
 function createPrompt({ liarName, victim, lie, tone, length, format }) {
-  // Define tone descriptions
   const toneDescriptions = {
-    deadpan: 'Write in a completely flat, matter-of-fact tone as if describing mundane facts.',
-    melodrama: 'Write with extreme emotional exaggeration, lots of dramatic flourishes and overwrought language.',
-    sarcasm: 'Write with heavy sarcasm and ironic commentary throughout.',
-    gaslighting: 'Write in a way that subtly makes the lie seem so normal and reasonable that the reader questions their own memory.',
-    thriller: 'Write with suspenseful, tense language as if this were a crime thriller.',
-    horror: 'Write with eerie, unsettling tone and gothic elements suggesting something sinister.'
+    deadpan: 'Write in a flat, deadpan tone treating absolute absurdity as profound fact.',
+    melodrama: 'Write with extreme emotional exaggeration. Add sparkles and dramatic gasps.',
+    sarcasm: 'Write with heavy sarcasm, rolling your eyes at the gullibility of everyone involved.',
+    gaslighting: 'Subtly make the lie sound so reasonable that the reader starts doubting their own grasp on reality.',
+    thriller: 'Suspenseful, tense, paranoid. Like a gripping crime thriller.',
+    horror: 'Eerie, unsettling, gothic nightmare aesthetic.'
   };
   
-  // Define length constraints
   const lengthConstraints = {
-    quick: 'CONSTRAINT: Maximum 2-3 paragraphs total. Lead paragraph max 2 sentences. Total word count: 150-200 words maximum.',
-    full: 'CONSTRAINT: Exactly 3-4 detailed sections with rich context. Total word count: 500-700 words.',
-    epic: 'CONSTRAINT: Elaborate multi-scene narrative with vivid sensory details. Total word count: 900-1200 words.'
+    quick: 'CONSTRAINT: Maximum 2-3 paragraphs. Lead max 2 sentences. Max word count: 200.',
+    full: 'CONSTRAINT: Exactly 3 sections with rich context. Detail the background. Max word count: 500.',
+    epic: 'CONSTRAINT: Elaborate multi-scene narrative. Dive into the deep lore and internal monologue. Max word count: 800.'
   };
   
-  // Define format requirements
   const formatRequirements = {
-    comic: 'Generate EXACTLY 4 comic panels with narrator descriptions and dialogues in JSON format.',
+    comic: 'Generate EXACTLY 4 comic panels that follow this arc: Beat 1: The Lie is Told (confidence), Beat 2: The First Crack (suspicion appears), Beat 3: The Close Call (almost caught), Beat 4: The Escape or Twist (liar wins/loses).',
     whatsapp: 'Generate EXACTLY 8 alternating messages and narrator beats in JSON format.',
-    text: 'Generate a single narrative string of EXACTLY 250-350 words with occasional dialogue.'
+    text: 'Generate a single narrative string of EXACTLY 250-350 words with occasionally unhinged dialogue.'
   };
 
-  return `You are the AI editor of Weliepedia — a comedy encyclopedia documenting lies as if they were real history.
+  return `
+Classify this lie silently (cover_story, brag, excuse, romantic, identity, financial) and use that to frame your tone.
+Infer the suspicion level of the victim (${victim}) - are they trusting or sharp? Adjust the drama accordingly.
+INVENT 3 specific fake details (a date, a place, a named person) and use them consistently in both the article and the formatted output.
 
-Tone: ${toneDescriptions[tone] || toneDescriptions.deadpan}
+Tone Style: ${toneDescriptions[tone] || toneDescriptions.deadpan}
 Length: ${lengthConstraints[length] || lengthConstraints.quick}
-Format: ${formatRequirements[format] || formatRequirements.text}
+Format Instruction: ${formatRequirements[format] || formatRequirements.text}
 
-Liar: ${liarName} | Victim: ${victim} | Lie: "${lie}"
+Liar: ${liarName} | Victim: ${victim} | The Lie: "${lie}"
 
-Write a Wikipedia-style article treating this lie as documented fact (use [1][2] citation markers). 
-Also generate the ${format} output as described above.
+Write a Wikipedia-style article treating this massive lie as absolute documented fact (use [1][2] citation markers).
+Also generate the ${format} output as described, keeping dialogues punchy and funny.
 
-Respond ONLY in this exact JSON format (no markdown, no preamble):
+Respond ONLY in this exact JSON format (no markdown fences, no preamble):
 
 {
-  "article_title": "encyclopedic title treating the lie as real documented history",
-  "infobox_emoji": "one emoji",
-  "infobox": [{"k":"Date","v":"..."},{"k":"Location","v":"..."}],
-  "lead_paragraph": "authoritative opening paragraph with [1][2] citations",
+  "article_title": "Absurd but encyclopedic title treating the lie as real history",
+  "infobox_emoji": "one thematic emoji",
+  "infobox": [{"k":"Date","v":"..."},{"k":"Location","v":"..."},{"k":"Witness","v":"..."},{"k":"Outcome","v":"..."}],
+  "lead_paragraph": "A hooking opening paragraph with [1] citations",
+  "lie_rating": {
+    "score": 8,
+    "roast": "One brutal, sarcastic, unhinged one-liner roasting the quality of this lie."
+  },
   "sections": [
-    {"heading":"Background","content":"2-3 sentences with [3] citations"},
-    {"heading":"The Incident","content":"2-3 sentences with [4][5] citations"}
+    {"heading":"Background","content":"2 sentences with [2] citations"},
+    {"heading":"The Incident","content":"2 sentences with [3] citations"}
   ],
-  "format_output": [/* formatted output matching the ${format} requirement */],
-  "see_also": ["Funny fake article 1","Fake article 2"],
-  "references": ["Academic-sounding but subtly absurd ref 1","Ref 2"]
+  "format_output": [/* formatted output for ${format}. For comic, strictly 4 objects with: {"panel_num":1, "narrator":"scene info", "dialogues":[{"speaker":"name","side":"left/right","text":"..."}], "reaction":"KABOOM!"} */],
+  "see_also": ["Hilarious fake article 1", "Fake article 2"],
+  "references": ["Sarcastic academic reference 1", "Reference 2"]
 }`;
 }
-/**
- * Validates input parameters for the /api/article endpoint
- * 
- * @param {Object} data - Input data to validate
- * @returns {Object} - { isValid, message, field, data }
- */
+
 function validateInput(data) {
-    // Required fields
-    const requiredFields = ['liarName', 'victim', 'lie', 'tone', 'length', 'format', 'modelId'];
-    
-    // Check for missing fields
-    for (const field of requiredFields) {
-      if (!data[field] || typeof data[field] !== 'string' || data[field].trim() === '') {
-        return {
-          isValid: false,
-          message: `Missing or empty required field: ${field}`,
-          field: field
-        };
-      }
+  const requiredFields = ['liarName', 'victim', 'lie', 'tone', 'length', 'format', 'modelId'];
+  for (const field of requiredFields) {
+    if (!data[field] || typeof data[field] !== 'string' || data[field].trim() === '') {
+      return { isValid: false, message: `Missing or empty required field: ${field}`, field: field };
     }
-    
-    // Validate tone
-    const validTones = ['deadpan', 'melodrama', 'sarcasm', 'gaslighting', 'thriller', 'horror'];
-    if (!validTones.includes(data.tone)) {
-      return {
-        isValid: false,
-        message: `Invalid tone. Must be one of: ${validTones.join(', ')}`,
-        field: 'tone'
-      };
-    }
-    
-    // Validate length
-    const validLengths = ['quick', 'full', 'epic'];
-    if (!validLengths.includes(data.length)) {
-      return {
-        isValid: false,
-        message: `Invalid length. Must be one of: ${validLengths.join(', ')}`,
-        field: 'length'
-      };
-    }
-    
-    // Validate format
-    const validFormats = ['comic', 'whatsapp', 'text'];
-    if (!validFormats.includes(data.format)) {
-      return {
-        isValid: false,
-        message: `Invalid format. Must be one of: ${validFormats.join(', ')}`,
-        field: 'format'
-      };
-    }
-    
-    // Validate modelId
-    const validModels = ['llama3-70b', 'mistral', 'qwen3', 'gpt-oss', 'llama3-8b', 'kimi'];
-    if (!validModels.includes(data.modelId)) {
-      return {
-        isValid: false,
-        message: `Invalid model. Must be one of: ${validModels.join(', ')}`,
-        field: 'modelId'
-      };
-    }
-    
-    // Return validated data
-    return {
-      isValid: true,
-      data: {
-        liarName: data.liarName.trim(),
-        victim: data.victim.trim(),
-        lie: data.lie.trim(),
-        tone: data.tone,
-        length: data.length,
-        format: data.format,
-        modelId: data.modelId
-      }
-    };
   }
+  return {
+    isValid: true,
+    data: {
+      liarName: data.liarName.trim(),
+      victim: data.victim.trim(),
+      lie: data.lie.trim(),
+      tone: data.tone,
+      length: data.length,
+      format: data.format,
+      modelId: data.modelId
+    }
+  };
+}
   
-// Start the server
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 app.listen(PORT, HOST, () => {
   console.log(`Weliepedia backend server running on ${HOST}:${PORT}`);
   console.log('API endpoint: POST /api/article');
-  console.log('Health check: GET /health');
+  console.log('Stats: GET /api/stats');
 });
