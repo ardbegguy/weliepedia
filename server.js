@@ -40,15 +40,7 @@ app.get('/health', (req, res) => {
 });
 
 app.get('/', (req, res) => {
-  res.json({
-    status: 'ok',
-    message: 'Weliepedia Backend API',
-    endpoints: {
-      health: '/health',
-      generate: '/api/article',
-      stats: '/api/stats'
-    }
-  });
+  res.sendFile(require('path').join(__dirname, 'index.html'));
 });
 
 app.get('/api/stats', (req, res) => {

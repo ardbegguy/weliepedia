@@ -99,3 +99,4 @@ typings/
 
 # macOS
 .DS_Store
+.env
