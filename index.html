@@ -237,6 +237,19 @@ input[type=range]::-webkit-slider-thumb {
   font-size: 9px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-top: 8px;
 }
 
+/* ── TRACKER & STATS ── */
+#lie-tracker{position:relative;width:100%;height:110px;overflow:hidden;margin-bottom:24px;}
+#lie-tracker svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.node-pill{position:absolute;background:var(--surface-high);border:1px solid var(--border);padding:6px 12px;border-radius:20px;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;z-index:10;transition:all .2s;color:var(--text-muted)}
+.node-pill:hover{background:var(--primary);color:#000;transform:scale(1.08)}
+.node-pill.active{border-color:var(--tertiary);color:var(--tertiary);box-shadow:0 0 12px rgba(255,110,133,0.4);animation:nodepulse 2s infinite}
+@keyframes nodepulse{0%,100%{box-shadow:0 0 8px rgba(255,110,133,0.4)}50%{box-shadow:0 0 20px rgba(255,110,133,0.8)}}
+
+.global-stats {
+  text-align: center; font-size: 11px; color: var(--text-hint); margin-top: 24px; font-family: 'Inter', sans-serif;
+}
+.global-stats span { color: var(--primary); font-weight: 700; }
+
 /* ── STYLE GRID ── */
 .style-grid {
   display: grid;
@@ -477,14 +490,22 @@ input[type=range]::-webkit-slider-thumb {
 
     <!-- CTA -->
     <div class="gen-container">
-      <div style="position:absolute; top:-20px; width:100%;"><div id="thought-bubble">Lying in progress...</div></div>
+      <div style="position:absolute; top:-30px; width:100%;"><div id="thought-bubble">Lying in progress...</div></div>
       <button class="gen-btn" onclick="generate()" id="gen-btn">
         <div class="spinner" id="spinner" style="display:none;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;"></div>
         <span id="btn-lbl">TELL YOUR LIES</span>
         <span>➤</span>
       </button>
+      <div class="global-stats">Total fabrications served: <span id="gl-count">...</span></div>
     </div>
     <div class="err" id="err"></div>
+    
+    <!-- Tracking Tracker -->
+    <div class="section-title" id="tracker-title" style="display:none;">Your Web of Lies</div>
+    <div id="lie-tracker" style="display:none;">
+      <svg id="web-svg"></svg>
+      <div id="nodes-container"></div>
+    </div>
 
     <!-- OUTPUT -->
     <div class="output" id="output">
@@ -585,21 +606,36 @@ function initPicker(){
   });
 }
 
+function fetchStats() {
+  fetch(API+'/api/stats').then(r=>r.json()).then(d=>{
+    document.getElementById('gl-count').textContent=d.totalLies||0;
+  }).catch(()=>{
+    document.getElementById('gl-count').textContent='∞';
+  });
+}
+
 function initArchetypes() {
   const sc = document.getElementById('arch-scroll');
   if(!sc) return;
   const tones = [
-    {name:'Loki', group:'The Mischief', tone:'sarcasm', img:'https://images.unsplash.com/photo-1542442828-287217bfb21f?w=400&q=80'},
-    {name:'Cersei', group:'The Ruthless', tone:'deadpan', img:'https://images.unsplash.com/photo-1544256718-3cae74d1c1bd?w=400&q=80'},
-    {name:'Barney', group:'The Legend', tone:'melodrama', img:'https://images.unsplash.com/photo-1550927407-50e2bd128b81?w=400&q=80'},
-    {name:'Ripley', group:'The Grifter', tone:'thriller', img:'https://images.unsplash.com/photo-1533227260871-b0e261a8080f?w=400&q=80'}
+    {name:'Deadpan', group:'The Ruthless', tone:'deadpan', colors:'linear-gradient(135deg, #1f1c2c, #928dab)', icon:'😐'},
+    {name:'Sarcasm', group:'The Mischief', tone:'sarcasm', colors:'linear-gradient(135deg, #f12711, #f5af19)', icon:'😏'},
+    {name:'Melodrama', group:'The Legend', tone:'melodrama', colors:'linear-gradient(135deg, #8E2DE2, #4A00E0)', icon:'🎭'},
+    {name:'Thriller', group:'The Grifter', tone:'thriller', colors:'linear-gradient(135deg, #000000, #434343)', icon:'🔪'},
+    {name:'Horror', group:'The Sinister', tone:'horror', colors:'linear-gradient(135deg, #111111, #8b0000)', icon:'👁️'},
+    {name:'Documentary', group:'The Scholar', tone:'documentary', colors:'linear-gradient(135deg, #3E5151, #DECBA4)', icon:'🎥'},
+    {name:'Gossip', group:'The Whisperer', tone:'gossip', colors:'linear-gradient(135deg, #FF416C, #FF4B2B)', icon:'💅'},
+    {name:'Corporate', group:'The Executive', tone:'corporate', colors:'linear-gradient(135deg, #0F2027, #203A43)', icon:'📈'},
+    {name:'Gen Z', group:'The Zoomer', tone:'genz', colors:'linear-gradient(135deg, #12c2e9, #c471ed)', icon:'💀'},
+    {name:'Conspiracy', group:'The Theorist', tone:'conspiratorial', colors:'linear-gradient(135deg, #16222A, #3A6073)', icon:'👽'},
+    {name:'Academic', group:'The Professor', tone:'academic', colors:'linear-gradient(135deg, #5c258d, #4389a2)', icon:'📚'}
   ];
   tones.forEach((t, i) => {
     const d = document.createElement('div');
     d.className = 'arch-card' + (i===0?' active':'');
     d.onclick = () => setOpt('tone', t.tone, d);
     d.innerHTML = `
-      <img src="${t.img}" alt="${t.name}">
+      <div style="width:100%; height:100%; background:${t.colors}; display:flex; align-items:center; justify-content:center; font-size:64px; opacity:0.8; transition:transform 0.3s; filter:grayscale(30%);" class="arch-img">${t.icon}</div>
       <div class="arch-overlay">
         <div class="arch-name">${t.name}</div>
         <div class="arch-group">${t.group}</div>
@@ -609,7 +645,7 @@ function initArchetypes() {
   });
 }
 
-window.onload=()=>{initSplash();initPicker();initArchetypes();};
+window.onload=()=>{initSplash();initPicker();initArchetypes();fetchStats();};
 
 /* Controls */
 function setLang(l,el){lang=l;document.querySelectorAll('.lang-toggle button').forEach(b=>b.classList.remove('active'));el.classList.add('active')}
@@ -688,6 +724,8 @@ async function generate(regen=false){
     const j=JSON.parse(raw);
     lastArticle=j;
     renderOutput(j,uname,fname);
+    addToTracker(uname,fname,j.article_title,getBadge(j.lie_rating?.score).icon);
+    fetchStats();
   }catch(e){
     errEl.textContent='❌ '+e.message;errEl.classList.add('on');
   }finally{
@@ -757,6 +795,8 @@ function renderFormat(j,uname,fname){
 
 /* Tracker */
 function addToTracker(u,f,title,icon){
+  document.getElementById('tracker-title').style.display='block';
+  document.getElementById('lie-tracker').style.display='block';
   lieHistory.push({u,f,title,icon});
   renderTracker();
 }
@@ -764,11 +804,11 @@ function renderTracker(){
   const cont=document.getElementById('nodes-container'),svg=document.getElementById('web-svg');
   cont.innerHTML='';svg.innerHTML='';
   if(!lieHistory.length)return;
-  const W=200,H=110,pad=18;
+  const pad=18;
   let prevX=null,prevY=null,paths='';
   lieHistory.slice(-6).forEach((n,i)=>{
-    const x=pad+i*70;
-    const y=i%2===0?30+Math.random()*15:65+Math.random()*15;
+    const x=pad+i*80;
+    const y=i%2===0?20+Math.random()*15:60+Math.random()*15;
     const pill=document.createElement('div');
     pill.className='node-pill'+(i===lieHistory.length-1?' active':'');
     pill.style.left=x+'px';pill.style.top=y+'px';
@@ -777,7 +817,7 @@ function renderTracker(){
     if(prevX!==null){
       const cx1=prevX+25+(Math.random()*20-10),cy1=prevY+(Math.random()*30-15);
       const cx2=x-10+(Math.random()*20-10),cy2=y+(Math.random()*20-10);
-      paths+=`<path d="M${prevX+30} ${prevY+10} C${cx1} ${cy1} ${cx2} ${cy2} ${x} ${y+10}" stroke="#c0392b" stroke-width="1.5" fill="none" opacity=".6" stroke-dasharray="3,3"/>`;
+      paths+=`<path d="M${prevX+30} ${prevY+10} C${cx1} ${cy1} ${cx2} ${cy2} ${x} ${y+10}" stroke="var(--primary)" stroke-width="2" fill="none" opacity=".6" stroke-dasharray="3,3"/>`;
     }
     prevX=x;prevY=y;
   });
