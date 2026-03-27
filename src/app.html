@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+
+		<!-- PWA / Theme -->
+		<meta name="theme-color" content="#FF6A39" />
+		<meta name="mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+		<meta name="apple-mobile-web-app-title" content="ALBI" />
+
+		<!-- Apple touch icons -->
+		<link rel="apple-touch-icon" href="/icons/icon-192.png" />
+		<link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192.png" />
+
+		<!-- Splash screens (optional, add if icons are ready) -->
+		<meta name="description" content="Feed us the lie — we'll build the world around it." />
+
+		%sveltekit.head%
+	</head>
+	<body data-sveltekit-preload-data="hover" class="overscroll-none">
+		<div style="display: contents">%sveltekit.body%</div>
+	</body>
+</html>

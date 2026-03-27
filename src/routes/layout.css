@@ -1,0 +1,140 @@
+@import url('https://fonts.googleapis.com/css2?family=Eczar:wght@400;500;600;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Caveat:wght@400;500;600;700&display=swap');
+
+@import 'tailwindcss';
+@plugin '@tailwindcss/forms';
+
+@theme {
+	/* ── Colors ── */
+	--color-primary: #ff6a39;
+	--color-background-light: #e6e6e6;
+	--color-background-dark: #262626;
+	--color-cream: #fff9ee;
+	--color-terminal-bg: #060f15;
+	--color-neu-green: #00ffaa;
+	--color-alibi-blue: #315caa;
+
+	/* ── Fonts ── */
+	--font-display: 'Eczar', Georgia, serif;
+	--font-mono: 'Space Mono', 'Courier New', monospace;
+	--font-hand: 'Caveat', cursive;
+
+	/* ── Shadows (Figma-exact) ── */
+	--shadow-neu-out: 12px 12px 24px #c4c4c4, -12px -12px 24px #ffffff;
+	--shadow-neu-in: inset 4px 4px 8px #c4c4c4, inset -4px -4px 8px #ffffff;
+	--shadow-gen-btn: 15px 15px 40px rgba(0, 0, 0, 0.3), -2px -2px 10px rgba(255, 255, 255, 0.4);
+}
+
+/* ── Base ───────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	overscroll-behavior: none;
+	-webkit-tap-highlight-color: transparent;
+}
+
+/* Safe-area padding for PWA (notch / home-bar devices) */
+body {
+	padding-top: env(safe-area-inset-top);
+	padding-bottom: env(safe-area-inset-bottom);
+	padding-left: env(safe-area-inset-left);
+	padding-right: env(safe-area-inset-right);
+}
+
+/* ── Range sliders ──────────────────────────────────────────────── */
+
+/*
+  Figma spec:
+    Track  : height 12px, bg #D1D1D1, box-shadow inset 3px 3px 6px #B3B3B3, inset -3px -3px 6px #FFFFFF, border-radius 6px
+    Thumb  : 26×48px, bg linear-gradient(180deg,#E0E0E0,#B8B8B8), border 1px solid #999,
+             box-shadow 0 4px 8px rgba(0,0,0,.2), inset 0 2px 4px 1px rgba(255,255,255,.8), inset 0 -2px 4px 1px rgba(0,0,0,.3)
+             border-radius 4px (rectangular, not circular)
+    Fill   : #F56F42 driven by --fill-pct CSS custom property set per-element
+*/
+
+input[type='range'] {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 100%;
+	height: 12px;
+	border-radius: 6px;
+	outline: none;
+	border: none;
+	cursor: pointer;
+	padding: 0;
+	/* 18px top/bottom margin so the 48px thumb has room without clipping */
+	margin: 18px 0;
+}
+
+/* ── Webkit track ── */
+input[type='range']::-webkit-slider-runnable-track {
+	height: 12px;
+	border-radius: 6px;
+	/* Orange progress via CSS custom prop --fill-pct (set inline per slider) */
+	background: linear-gradient(to right, #f56f42 var(--fill-pct, 0%), #d1d1d1 var(--fill-pct, 0%));
+	box-shadow:
+		inset 3px 3px 6px #b3b3b3,
+		inset -3px -3px 6px #ffffff;
+}
+
+/* ── Webkit thumb ── */
+input[type='range']::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 26px;
+	height: 48px;
+	border-radius: 4px; /* rectangular, Figma spec */
+	background: linear-gradient(180deg, #e0e0e0 0%, #b8b8b8 100%);
+	border: 1px solid #999999;
+	box-shadow:
+		0px 4px 8px rgba(0, 0, 0, 0.2),
+		inset 0px 2px 4px 1px rgba(255, 255, 255, 0.8),
+		inset 0px -2px 4px 1px rgba(0, 0, 0, 0.3);
+	cursor: pointer;
+	/* Centre the 48px thumb vertically over the 12px track */
+	margin-top: -18px;
+	transition: box-shadow 0.15s ease;
+}
+
+input[type='range']:active::-webkit-slider-thumb {
+	box-shadow:
+		0px 2px 4px rgba(0, 0, 0, 0.3),
+		inset 0px 3px 6px 1px rgba(0, 0, 0, 0.15),
+		inset 0px -1px 3px 1px rgba(255, 255, 255, 0.6);
+}
+
+/* ── Firefox track ── */
+input[type='range']::-moz-range-track {
+	height: 12px;
+	border-radius: 6px;
+	background: #d1d1d1;
+	box-shadow:
+		inset 3px 3px 6px #b3b3b3,
+		inset -3px -3px 6px #ffffff;
+}
+
+/* ── Firefox progress fill ── */
+input[type='range']::-moz-range-progress {
+	height: 12px;
+	border-radius: 6px 0 0 6px;
+	background: #f56f42;
+	box-shadow: inset 0px 2px 4px rgba(255, 255, 255, 0.3);
+}
+
+/* ── Firefox thumb ── */
+input[type='range']::-moz-range-thumb {
+	width: 26px;
+	height: 48px;
+	border-radius: 4px;
+	background: linear-gradient(180deg, #e0e0e0 0%, #b8b8b8 100%);
+	border: 1px solid #999999;
+	box-shadow:
+		0px 4px 8px rgba(0, 0, 0, 0.2),
+		inset 0px 2px 4px 1px rgba(255, 255, 255, 0.8),
+		inset 0px -2px 4px 1px rgba(0, 0, 0, 0.3);
+	cursor: pointer;
+}
